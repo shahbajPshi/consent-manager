@@ -28,7 +28,8 @@ public class Transformer {
                 provider.getName(),
                 address.getCity(),
                 telecom.getValue(),
-                provider.getTypes().get(0).getCoding().get(0).getCode()
+                (provider.getTypes().size() > 0 && provider.getTypes().get(0).getCoding().size() > 0)
+                ? provider.getTypes().get(0).getCoding().get(0).getCode() : ""
                 );
     }
 }

@@ -2,12 +2,14 @@ package com.pshi.consentmanager.link.discovery;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Value;
 
 @AllArgsConstructor
 @Getter
+@Value
 public class ProviderRepresentation {
-    private String name;
-    private String city;
-    private String telephone;
-    private String type;
+    String name;
+    String city;
+    String telephone;
+    String type;
 }
