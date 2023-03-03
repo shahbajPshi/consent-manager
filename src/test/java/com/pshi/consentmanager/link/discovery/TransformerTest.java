@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class TransformerTest {
 
     @Test
-    public void shouldTransformProviderToProviderRepresentation() {
+    void shouldTransformProviderToProviderRepresentation() {
         Address address = address().build();
         Telecom telecom = telecom().build();
         Coding coding = coding().build();
@@ -34,7 +34,7 @@ public class TransformerTest {
     }
 
     @Test
-    public void pickWorkTelephoneWhenAvailable() {
+    void pickWorkTelephoneWhenAvailable() {
         Telecom work = telecom().use("work").build();
         Telecom another = telecom().build();
         var provider = provider()
@@ -47,7 +47,7 @@ public class TransformerTest {
     }
 
     @Test
-    public void pickFirstWorkTelephoneWhenMultipleAvailable() {
+    void pickFirstWorkTelephoneWhenMultipleAvailable() {
         Telecom work = telecom().use("work").build();
         Telecom another = telecom().use("work").build();
         var provider = provider()
@@ -60,7 +60,7 @@ public class TransformerTest {
     }
 
     @Test
-    public void returnsEmptyTelephoneWhenSourceIsEmpty() {
+    void returnsEmptyTelephoneWhenSourceIsEmpty() {
         var provider = provider()
                 .telecoms(List.of())
                 .build();
@@ -71,7 +71,7 @@ public class TransformerTest {
     }
 
     @Test
-    public void pickWorkCityWhenAvailable() {
+    void pickWorkCityWhenAvailable() {
         Address work = address().use("work").build();
         Address another = address().build();
         var provider = provider()
@@ -84,7 +84,7 @@ public class TransformerTest {
     }
 
     @Test
-    public void pickFirstWorkCityWhenMultipleAvailable() {
+    void pickFirstWorkCityWhenMultipleAvailable() {
         Address work = address().use("work").build();
         Address another = address().use("Work").build();
         var provider = provider()
@@ -97,7 +97,7 @@ public class TransformerTest {
     }
 
     @Test
-    public void returnsEmptyCityWhenSourceIsEmpty() {
+    void returnsEmptyCityWhenSourceIsEmpty() {
         var provider = provider()
                 .addresses(List.of())
                 .build();
@@ -108,7 +108,7 @@ public class TransformerTest {
     }
 
     @Test
-    public void pickWorkCityAndWorkTelephoneAvailable() {
+    void pickWorkCityAndWorkTelephoneAvailable() {
         Address address = address().use("work").build();
         Address anotherAddress = address().build();
         Telecom telecom = telecom().use("work").build();

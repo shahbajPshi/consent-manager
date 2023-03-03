@@ -1,35 +1,36 @@
 package com.pshi.consentmanager.link.discovery;
 
-import com.pshi.consentmanager.link.discovery.model.Address;
-import com.pshi.consentmanager.link.discovery.model.Provider;
-import com.pshi.consentmanager.link.discovery.model.Telecom;
+import com.pshi.consentmanager.link.discovery.model.*;
 
 public class Transformer {
     public static ProviderRepresentation to(Provider provider) {
-        Address address = new Address("", "");
-        Telecom telecom = new Telecom("", "");
-        if (provider.getAddresses().size() > 0) {
-            address = provider.getAddresses()
-                    .stream()
-                    .filter(add -> add.getUse().equalsIgnoreCase("work"))
-                    .findFirst()
-                    .orElse(provider.getAddresses().get(0));
-        }
-
-        if (provider.getTelecoms().size() > 0) {
-            telecom = provider.getTelecoms()
-                    .stream()
-                    .filter(tel -> tel.getUse().equalsIgnoreCase("work"))
-                    .findFirst()
-                    .orElse(provider.getTelecoms().get(0));
-        }
-
-        return new ProviderRepresentation(
-                provider.getName(),
-                address.getCity(),
-                telecom.getValue(),
-                (provider.getTypes().size() > 0 && provider.getTypes().get(0).getCoding().size() > 0)
-                ? provider.getTypes().get(0).getCoding().get(0).getCode() : ""
+        Address address = provider.getAddresses()
+                .stream()
+                .filter(add -> add.getUse().equalsIgnoreCase("work"))
+                .findFirst()
+                .orElse(provider.getAddresses().size() > 0
+                        ? provider.getAddresses().get(0) : new Address("", "")
                 );
+        Telecom telecom = provider.getTelecoms()
+                .stream()
+                .filter(tel -> tel.getUse().equalsIgnoreCase("work"))
+                .findFirst()
+                .orElse(provider.getTelecoms().size() > 0
+                        ? provider.getTelecoms().get(0) : new Telecom("", "")
+                );
+
+        return ProviderRepresentation.builder()
+                .city(address.getCity())
+                .name(provider.getName())
+                .telephone(telecom.getValue())
+                .type(from(provider))
+                .build();
+    }
+
+    private static String from(Provider provider) {
+        return provider.getTypes().stream()
+                .findFirst()
+                .map(type -> type.getCoding().stream().findFirst().orElse(new Coding()).getCode())
+                .orElse("");
     }
 }
