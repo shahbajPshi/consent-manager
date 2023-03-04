@@ -1,0 +1,346 @@
+openapi: 3.0.0
+info:
+  version: 0.0.1
+  title: Health Information Consent Manager
+  description: >
+    Entity which provides health information aggregation services to customers of healthcare services.
+    It enables customers to fetch their health information from one or more Health Information Providers
+    (e.g., Hospitals, Diagnostic Labs, Medical Device Companies), based on their explicit Consent and to share such
+    aggregated information with Health Information Users i.e. entities in need of such data (e.g., Insurers,
+    Doctors, Medical Researchers).
+
+servers:
+  - url: http://localhost:8000
+    description: Dev
+
+tags:
+  - name: link
+
+paths:
+  /patients/discover:
+    post:
+      tags:
+        - link
+      summary: Discover patient
+      description: >
+        Return only one patient record with (potentially masked) associated care contexts
+        1. **At least one of the verified identifier matches.**
+        2. **Filter out records using unverified, firstName, secondName, gender and dob
+        if there are more than one patient records found from step 1.**
+      operationId: discoverPatient
+      parameters:
+        - $ref: "#/components/parameters/authorization"
+      requestBody:
+        required: true
+        description: A object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatientDiscoveryRequest'
+      responses:
+        '200':
+          description: Found a patient.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientDiscoveryResponse'
+
+  /patients/link:
+    post:
+      tags:
+        - link
+      summary: Link patient's care contexts
+      description: >
+        Links care contexts associated with only one patient
+          1. **Validates Transaction Id**
+      operationId: linkPatient
+      parameters:
+        - $ref: "#/components/parameters/authorization"
+      requestBody:
+        required: true
+        description: A object
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatientLinkReferenceRequest"
+          application/xml:
+            schema:
+              $ref: "#/components/schemas/PatientLinkReferenceRequest"
+      responses:
+        '200':
+          description: A successful link request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientLinkReferenceResponse"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/PatientLinkReferenceResponse"
+        '400':
+          description: >
+            **Causes:**
+              * Account reference number is invalid
+              * Care context reference numbers are invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientLinkReferenceErrResponse"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/PatientLinkReferenceErrResponse"
+        '401':
+          description: >
+            **Causes:**
+              * Unauthorized request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientLinkReferenceErrResponse"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/PatientLinkReferenceErrResponse"
+        '500':
+          description: >
+            **Causes:**
+              * Downstream system(s) is down.
+              * Unhandled exceptions.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientLinkReferenceErrResponse"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/PatientLinkReferenceErrResponse"
+
+  /patients/link/{linkRefNumber}:
+    post:
+      tags:
+        - link
+      summary: Link validates the token for expiry and sends the request to HIP.
+      description: >
+        Returns a list of linked care contexts with patient reference number.
+          1. **Validate token for expiry**
+          2. **Returns a list of masked linked care contexts with patient reference number**
+      operationId: linkPatient
+      parameters:
+        - $ref: "#/components/parameters/authorization"
+      requestBody:
+        required: true
+        description: A object
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatientLinkRequest"
+          application/xml:
+            schema:
+              $ref: "#/components/schemas/PatientLinkRequest"
+      responses:
+        '200':
+          description: List of linked care contexts of a patient with patient reference number.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientLinkResponse"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/PatientLinkResponse"
+        '400':
+          description: >
+            **Causes:**
+              * Link reference number is invalid
+              * Token is invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientLinkErrResponse"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/PatientLinkErrResponse"
+        '401':
+          description: >
+            **Causes:**
+              * Unauthorized request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientLinkErrResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/PatientLinkErrResponse'
+        '500':
+          description: >
+            **Causes:**
+              * Downstream system(s) is down.
+              * Unhandled exceptions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientLinkErrResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/PatientLinkErrResponse'
+
+components:
+  parameters:
+    authorization:
+      name: Authorization
+      in: header
+      description: Bearer token which was issued after successful login.
+      schema:
+        type: string
+
+  schemas:
+    PatientDiscoveryResponse:
+      type: object
+      properties:
+        patient:
+          $ref: '#/components/schemas/PatientRepresentation'
+
+    PatientRepresentation:
+      type: object
+      properties:
+        referenceNumber:
+          type: string
+        display:
+          type: string
+        careContexts:
+          type: array
+          items:
+            $ref: '#/components/schemas/CareContextRepresentation'
+      xml:
+        name: PatientRepresentation
+
+    Patient:
+      type: object
+      properties:
+        referenceNumber:
+          type: string
+        careContexts:
+          type: array
+          items:
+            $ref: "#/components/schemas/CareContext"
+      xml:
+        name: Patient
+
+    CareContextRepresentation:
+      type: object
+      properties:
+        referenceNumber:
+          type: string
+        display:
+          type: string
+      xml:
+        name: CareContextRepresentation
+
+    CareContext:
+      type: object
+      properties:
+        referenceNumber:
+          type: string
+      xml:
+        name: CareContext
+
+    PatientDiscoveryRequest:
+      type: object
+      properties:
+        hipId:
+          type: string
+          description: Identifier of the health information provider where patient record needs to be looked up.
+
+    PatientLinkReferenceRequest:
+      type: object
+      properties:
+        transactionId:
+          type: string
+        patient:
+          $ref: "#/components/schemas/Patient"
+      xml:
+        name: PatientLinkReferenceRequest
+
+    PatientLinkReferenceResponse:
+      type: object
+      properties:
+        transactionId:
+          type: string
+        link:
+          $ref: "#/components/schemas/link"
+      xml:
+        name: PatientLinkReferenceResponse
+
+    link:
+      type: object
+      properties:
+        referenceNumber:
+          type: string
+        authenticationType:
+          type: string
+          enum: ['DIRECT', 'MEDIATED']
+        meta:
+          $ref: "#/components/schemas/Meta"
+      xml:
+        name: link
+
+    Meta:
+      type: object
+      required:
+        - communicationMedium
+        - communicationHint
+      properties:
+        communicationMedium:
+          type: string
+          enum: ['MOBILE', 'EMAIL']
+        communicationHint:
+          type: string
+        communicationExpiry:
+          type: string
+          example: "2023-12-30T12:01:50Z"
+      xml:
+        name: Meta
+
+    PatientLinkReferenceErrResponse:
+      type: object
+      properties:
+        error:
+          $ref: "#/components/schemas/Error"
+      xml:
+        name: PatientLinkReferenceErrResponse
+
+    PatientLinkRequest:
+      type: object
+      properties:
+        transactionId:
+          type: string
+        token:
+          type: string
+      xml:
+        name: PatientLinkRequest
+
+    PatientLinkResponse:
+      type: object
+      properties:
+        patient:
+          $ref: "#/components/schemas/PatientRepresentation"
+      xml:
+        name: PatientLinkResponse
+
+    PatientLinkErrResponse:
+      type: object
+      properties:
+        error:
+          $ref: "#/components/schemas/Error"
+      xml:
+        name: PatientLinkErrResponse
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          enum: [1000, 10001]
+          description: >
+            1. Error code 1000 : No patient found
+            2. Error code 1001 : Multiple patients found
+        message:
+          type: string
+      xml:
+        name: Error
